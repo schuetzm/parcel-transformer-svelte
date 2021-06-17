@@ -1,4 +1,5 @@
 const path = require('path');
+const {relativePath} = require('@parcel/utils');
 
 Object.defineProperty(exports, '__esModule', { value: true });
 
@@ -13,12 +14,12 @@ async function getConfigFile(config) {
 }
 
 async function configHydrator(configFile, config, options) {
-  config.setResult({
+  return {
     raw: configFile,
     hydrated: {
       preprocess: configFile.preprocess,
     },
-  });
+  };
 }
 
 exports.load = async function load({ config, options, logger }) {
@@ -40,10 +41,16 @@ exports.load = async function load({ config, options, logger }) {
       });
     }
 
-    config.shouldInvalidateOnStartup();
+    config.invalidateOnStartup();
 
     if (contents.preprocess) {
-      config.shouldReload();
+      config.addDevDependency({
+        specifier: relativePath(
+          path.dirname(config.searchPath),
+          configFile.filePath,
+        ),
+        resolveFrom: config.searchPath,
+      });
     }
   }
 
